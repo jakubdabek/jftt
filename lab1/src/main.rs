@@ -1,4 +1,5 @@
 use automaton;
+
 fn main() {
     let pattern: Vec<_> = "aaa".chars().collect();
     let alphabet: Vec<_> = "aąbcd".chars().collect();
@@ -51,8 +52,6 @@ mod tests {
         }
     }
 
-//    trace_macros!(true);
-
     make_tests! {
         test aaa: { pattern = "aaa", alphabet = "a", text = "aaa", expected = &[0usize] }
         test aaaa: { pattern = "aaa", alphabet = "a", text = "aaaa", expected = &[0usize, 1] }
@@ -77,46 +76,4 @@ mod tests {
         test xyzw5: { pattern = "XYX", alphabet = "XYZW", text = "XYXYYXYYYXYYYYXYXYXYXZYXZ", expected = &[0usize,14,16,18] }
         test xyzw6: { pattern = "XYXY", alphabet = "XYZW", text = "XYXYYXYYYXYYYYXYXYXYXZYXZ", expected = &[0usize,14,16] }
     }
-
-
-//    macro_rules! make_tests {
-//        ($name: ident, $pattern: expr, $alphabet: expr, $text: expr, $expected: expr) => {
-//            mod $name {
-//                #[test]
-//                fn test_automaton() {
-//                    make_test!(automaton::Matcher::new, $pattern, $alphabet, $text, $expected);
-//                }
-//
-//                #[test]
-//                fn test_kmp() {
-//                    make_test!(knuth_morris_pratt::Matcher::new, $pattern, $alphabet, $text, $expected);
-//                }
-//            }
-//        };
-//    }
-//
-////    trace_macros!(false);
-//
-//    make_tests!(aaa, "aaa", "a", "aaa", &[0usize]);
-//    make_tests!(aaaa, "aaa", "a", "aaaa", &[0usize, 1]);
-//    make_tests!(aa, "aaa", "a", "aa", &[]);
-//
-//    make_tests!(greek1, "δ", "αβγδ", "αβαβγβαβαβαβαβγ", &[]);
-//    make_tests!(greek2, "γδ", "αβγδ", "αβαβγβαβαβαβαβγ", &[]);
-//    make_tests!(greek3, "αβ", "αβγδ", "αβαβγβαβαβαβαβγ", &[0usize,2,6,8,10,12]);
-//    make_tests!(greek4, "αβαβ", "αβγδ", "αβαβγβαβαβαβαβγ", &[0usize,6,8,10]);
-//
-//    make_tests!(numbers1, "0", "7890", "78787999997878787879", &[]);
-//    make_tests!(numbers2, "9", "7890", "78787999997878787879", &[5usize,6,7,8,9,19]);
-//    make_tests!(numbers3, "787", "7890", "78787999997878787879", &[0usize,2,10,12,14,16]);
-//    make_tests!(numbers4, "99", "7890", "78787999997878787879", &[5usize,6,7,8]);
-//    make_tests!(numbers5, "879", "7890", "78787999997878787879", &[3usize,17]);
-//    make_tests!(numbers6, "978", "7890", "78787999997878787879", &[9usize]);
-//
-//    make_tests!(xyzw1, "W", "XYZW", "XYXYYXYYYXYYYYXYXYXYXZYXZ", &[]);
-//    make_tests!(xyzw2, "YW", "XYZW", "XYXYYXYYYXYYYYXYXYXYXZYXZ", &[]);
-//    make_tests!(xyzw3, "YX", "XYZW", "XYXYYXYYYXYYYYXYXYXYXZYXZ", &[1usize,4,8,13,15,17,19,22]);
-//    make_tests!(xyzw4, "YY", "XYZW", "XYXYYXYYYXYYYYXYXYXYXZYXZ", &[3usize,6,7,10,11,12]);
-//    make_tests!(xyzw5, "XYX", "XYZW", "XYXYYXYYYXYYYYXYXYXYXZYXZ", &[0usize,14,16,18]);
-//    make_tests!(xyzw6, "XYXY", "XYZW", "XYXYYXYYYXYYYYXYXYXYXZYXZ", &[0usize,14,16]);
 }
