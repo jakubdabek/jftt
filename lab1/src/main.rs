@@ -1,15 +1,32 @@
 use automaton;
+use std::io::stdin;
+use std::io;
 
-fn main() {
-    let pattern: Vec<_> = "aaa".chars().collect();
-    let alphabet: Vec<_> = "aąbcd".chars().collect();
-    let text: Vec<_> = "abacaaabaaabaaaąbabacb".chars().collect();
-    let matcher = automaton::Matcher::new(&alphabet, &pattern, &text);
+fn prompt(text: &str) -> io::Result<Vec<char>> {
+    println!("{}", text);
+    let mut pattern = String::new();
+    stdin().read_line(&mut pattern)?;
 
-    println!("{:?}", &matcher);
-    for (s, e) in &matcher {
-        println!("match found at {}..{}", s, e);
+    let pattern = pattern.trim_end_matches('\n');
+
+    Ok(pattern.chars().collect())
+}
+
+fn main() -> io::Result<()> {
+    let pattern = prompt("Enter pattern:")?;
+    let alphabet = prompt("Enter alphabet:")?;
+    let text = prompt("Enter text to search:")?;
+
+    let ref matcher_aut = automaton::Matcher::new(&alphabet, &pattern, &text);
+    let ref matcher_kmp = knuth_morris_pratt::Matcher::new(&alphabet, &pattern, &text);
+
+    println!("{:?} {:?}", matcher_aut, matcher_kmp);
+    for ((s1, e1), (s2, e2)) in matcher_aut.iter().zip(matcher_kmp) {
+        assert_eq!((s1, e2), (s2, e2));
+        println!("match found at {}..{}", s1, e1);
     }
+
+    Ok(())
 }
 
 #[cfg(test)]
@@ -56,6 +73,8 @@ mod tests {
         test aaa: { pattern = "aaa", alphabet = "a", text = "aaa", expected = &[0usize] }
         test aaaa: { pattern = "aaa", alphabet = "a", text = "aaaa", expected = &[0usize, 1] }
         test aa: { pattern = "aaa", alphabet = "a", text = "aa", expected = &[] }
+
+        test abab: { pattern = "abab", alphabet = "ab", text = "abababab", expected = &[0usize,2,4] }
 
         test greek1: { pattern = "δ", alphabet = "αβγδ", text = "αβαβγβαβαβαβαβγ", expected = &[] }
         test greek2: { pattern = "γδ", alphabet = "αβγδ", text = "αβαβγβαβαβαβαβγ", expected = &[] }
