@@ -5,27 +5,27 @@ pub struct Matcher<'a> {
     alphabet: &'a[char],
     pattern: &'a[char],
     text: &'a[char],
-    transitions: BTreeMap<i32, i32>,
+    transitions: BTreeMap<usize, usize>,
 }
 
 pub struct MatcherIter<'a> {
     matcher: &'a Matcher<'a>,
-    current_state: i32,
+    current_state: usize,
     current_index: usize,
 }
 
-fn make_transitions(pattern: &[char]) -> BTreeMap<i32, i32> {
+fn make_transitions(pattern: &[char]) -> BTreeMap<usize, usize> {
     let m = pattern.len();
     let mut transitions = BTreeMap::new();
     transitions.insert(1, 0);
-    let mut k = 0i32;
+    let mut k = 0;
 
-    for q in 2..=(m as i32) {
-        while k > 0 && pattern[k as usize] != pattern[q as usize - 1] {
+    for q in 2..=m {
+        while k > 0 && pattern[k] != pattern[q - 1] {
             k = transitions[&k];
         }
 
-        if pattern[k as usize] == pattern[q as usize - 1] {
+        if pattern[k] == pattern[q - 1] {
             k += 1;
         }
 
@@ -60,11 +60,11 @@ impl Iterator for MatcherIter<'_> {
     fn next(&mut self) -> Option<Self::Item> {
         let ref mut q = self.current_state;
         while self.current_index < self.matcher.text.len() {
-            while *q > 0 && self.matcher.pattern[*q as usize] != self.matcher.text[self.current_index] {
+            while *q > 0 && self.matcher.pattern[*q] != self.matcher.text[self.current_index] {
                 *q = self.matcher.transitions[q];
             }
 
-            if self.matcher.pattern[*q as usize] == self.matcher.text[self.current_index] {
+            if self.matcher.pattern[*q] == self.matcher.text[self.current_index] {
                 *q += 1;
             }
 

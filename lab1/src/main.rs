@@ -21,9 +21,10 @@ fn main() -> io::Result<()> {
     let ref matcher_kmp = knuth_morris_pratt::Matcher::new(&alphabet, &pattern, &text);
 
     println!("{:?} {:?}", matcher_aut, matcher_kmp);
-    for ((s1, e1), (s2, e2)) in matcher_aut.iter().zip(matcher_kmp) {
-        assert_eq!((s1, e2), (s2, e2));
-        println!("match found at {}..{}", s1, e1);
+    for (match1, match2) in matcher_aut.iter().zip(matcher_kmp) {
+        assert_eq!(match1, match2);
+        let (start, end) = match1;
+        println!("match found at {}..{}", start, end);
     }
 
     Ok(())
