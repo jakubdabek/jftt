@@ -7,7 +7,7 @@ fn prompt(text: &str) -> io::Result<Vec<char>> {
     let mut pattern = String::new();
     stdin().read_line(&mut pattern)?;
 
-    let pattern = pattern.trim_end_matches('\n');
+    let pattern = pattern.trim_end_matches(&['\r', '\n'][..]);
 
     Ok(pattern.chars().collect())
 }
