@@ -42,14 +42,9 @@ fn create_automaton<'a>(alphabet: &'a[char], pattern: &'a[char]) -> Automaton<'a
             let mut k = min(q+1, m-1) + 1;
             loop {
                 k -= 1;
-//                if let Some(prefix) = pattern.get(..k) {
                 if pattern_prefix.ends_with(&pattern[..k]) {
                     break;
                 }
-//                } else {
-//                    k = 0;
-//                    break;
-//                }
             }
 
             automaton.transitions.entry(q as i32).or_insert_with(||BTreeMap::new()).insert(a, k as i32);
