@@ -21,11 +21,15 @@ fn main() -> io::Result<()> {
     let ref matcher_kmp = knuth_morris_pratt::Matcher::new(&alphabet, &pattern, &text);
 
     println!("{:?} {:?}", matcher_aut, matcher_kmp);
+    let mut count = 0;
     for (match1, match2) in matcher_aut.iter().zip(matcher_kmp) {
         assert_eq!(match1, match2);
         let (start, end) = match1;
         println!("match found at {}..{}", start, end);
+        count += 1;
     }
+    
+    println!("Found {} occurrences", count);
 
     Ok(())
 }
@@ -95,5 +99,12 @@ mod tests {
         test xyzw4: { pattern = "YY", alphabet = "XYZW", text = "XYXYYXYYYXYYYYXYXYXYXZYXZ", expected = &[3usize,6,7,10,11,12] }
         test xyzw5: { pattern = "XYX", alphabet = "XYZW", text = "XYXYYXYYYXYYYYXYXYXYXZYXZ", expected = &[0usize,14,16,18] }
         test xyzw6: { pattern = "XYXY", alphabet = "XYZW", text = "XYXYYXYYYXYYYYXYXYXYXZYXZ", expected = &[0usize,14,16] }
+        
+        test current1: { pattern = "a", alphabet = "maμαま", text = "μμμαまmαmmmαααμmμμμまmμmまμままααmαμμまままαまmαμまααmααmμμαμままmまmmμαまmμαα", expected = &[] }
+        test current2: { pattern = "ma", alphabet = "maμαま", text = "μμμαまmαmmmαααμmμμμまmμmまμままααmαμμまままαまmαμまααmααmμμαμままmまmmμαまmμαα", expected = &[] }
+        test current3: { pattern = "まm", alphabet = "maμαま", text = "μμμαまmαmmmαααμmμμμまmμmまμままααmαμμまままαまmαμまααmααmμμαμままmまmmμαまmμαα", expected = &[4usize,18,36,52,54,59] }
+        test current4: { pattern = "αα", alphabet = "maμαま", text = "μμμαまmαmmmαααμmμμμまmμmまμままααmαμμまままαまmαμまααmααmμμαμままmまmmμαまmμαα", expected = &[10usize,11,26,41,44,62] }
+        test current5: { pattern = "mαm", alphabet = "maμαま", text = "μμμαまmαmmmαααμmμμμまmμmまμままααmαμμまままαまmαμまααmααmμμαμままmまmmμαまmμαα", expected = &[5usize] }
+        test current6: { pattern = "μ", alphabet = "maμαま", text = "μμμαまmαmmmαααμmμμμまmμmまμままααmαμμまままαまmαμまααmααmμμαμままmまmmμαまmμαα", expected = &[0,1,2,13,15,16,17,20,23,30,31,39,47,48,50,57,61] }
     }
 }
