@@ -28,6 +28,6 @@ int main(int argc, char *argv[])
         yyout = stdout;
  
     yylex();
-    printf("lines: %d words: %d\n", line_count, word_count);
+    fprintf(stderr, "lines: %d words: %d\n", line_count, word_count);
 }
 

@@ -1,9 +1,9 @@
 
 WS                  [[:blank:]\n]+
 
-COMMENT_BEGIN       "<!--"
-COMMENT_END         "-->"
-COMMENT             {COMMENT_BEGIN}([^-]|-[^-])*{COMMENT_END}
+CommentBegin       "<!--"
+CommentEnd         "-->"
+Comment             {CommentBegin}([^-]|-[^-])*{CommentEnd}
 
 CDStart             "<![CDATA["
 CData               ([^\]]|"]"[^\]]|"]"{2,}[^\]>])*
@@ -16,33 +16,28 @@ Name                [[:alpha:]_:]{NameChar}*
     /* specification says that it should be [^"<] below */
 AttValue            \"[^"]*\"|\'[^']*\'
 Attribute           {Name}={AttValue}
-ETag                '</'{Name}{WS}?'>'
+ETag                "</"{Name}{WS}?">"
 
 %x TAG
 %x SCRIPT
 %x SCRIPTTAG
-%x STR
-
-%{
-    int tag_start;
-%}
 
 %%
 
 {CDSect}            fprintf(yyout, "##CDATA##");
-{COMMENT}           fprintf(yyout, "##COMMENT##");
+{Comment}           fprintf(yyout, "##Comment##");
 
-"<script"                                   { ECHO; BEGIN(SCRIPTTAG); }
-"<"{Name}                                   { ECHO; BEGIN(TAG); }
+"<script"                                   ECHO; BEGIN(SCRIPTTAG);
+"<"{Name}                                   ECHO; BEGIN(TAG);
 <TAG,SCRIPTTAG>({WS}{Attribute})*{WS}?      ECHO;
-<TAG,SCRIPTTAG>"/"?">"                     { 
+<TAG,SCRIPTTAG>"/"?">"                      { 
                                                 ECHO; 
                                                 if (YY_START == TAG)
                                                     BEGIN(INITIAL);
                                                 else
                                                     BEGIN(SCRIPT);
                                             }
-<SCRIPT>"</script"{WS}?>                    { ECHO; BEGIN(INITIAL); }
+<SCRIPT>"</script"{WS}?>                    ECHO; BEGIN(INITIAL);
 
 %%
 
