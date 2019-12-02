@@ -22,6 +22,7 @@ main.o: result.h
 test: main
 	diff <(./main < test1.txt) test1.out.txt
 	diff <(./main < test2.txt) test2.out.txt
+	diff <(./main < test3.txt) test3.out.txt
 
 clean:
 	$(RM) main *.o *.tab.h *.tab.c *.yy.c
