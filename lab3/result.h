@@ -1,7 +1,10 @@
 #pragma once
 
+#include <stdbool.h>
+
 struct result
 {
-    int value;
     char *polish;
+    int value;
+    bool primitive;
 };

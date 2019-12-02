@@ -14,7 +14,7 @@ int mydiv(int a, int b);
 int mymod(int a, int b);
 
 
-void save_unary(struct result *a, char op, int value, struct result *result);
+void save_unary(struct result *a, char op, char postfix_op, int value, struct result *result);
 void save_binary(struct result *a, struct result *b, char op, int value, struct result *result);
 
 void take_result(struct result*);
@@ -51,7 +51,7 @@ exp:
     | exp '*' exp           { save_binary(&$1, &$3, '*', $1.value * $3.value, &$$); }
     | exp '/' exp           { save_binary(&$1, &$3, '/', mydiv($1.value, $3.value), &$$); }
     | exp '%' exp           { save_binary(&$1, &$3, '%', mymod($1.value, $3.value), &$$); }
-    | '-' exp  %prec NEG    { save_unary(&$2, '~', -$2.value, &$$);                 }
+    | '-' exp  %prec NEG    { save_unary(&$2, '-', '~', -$2.value, &$$);                 }
     | exp '^' exp           { save_binary(&$1, &$3, '^', mypow($1.value, $3.value), &$$); }
     | '(' exp ')'           { $$ = $2; }
     ;
@@ -88,13 +88,17 @@ int mymod(int a, int b)
         return b + divmod.rem;
 }
 
-void save_unary(struct result *a, char op, int value, struct result *result)
+void save_unary(struct result *a, char op, char postfix_op, int value, struct result *result)
 {
     char buf[64];
-    snprintf(buf, 64, "%s %c", a->polish, op);
+    if (a->primitive)
+        snprintf(buf, 64, "%c%s", op, a->polish);
+    else
+        snprintf(buf, 64, "%s %c", a->polish, postfix_op);
 
     result->value = value;
     result->polish = strndup(buf, 64);
+    result->primitive = false;
 
     free(a->polish);
 }
@@ -106,6 +110,7 @@ void save_binary(struct result *a, struct result *b, char op, int value, struct 
 
     result->value = value;
     result->polish = strndup(buf, 64);
+    result->primitive = false;
 
     free(a->polish);
     free(b->polish);

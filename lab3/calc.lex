@@ -23,7 +23,12 @@ Number  [0-9]+
 "^"                 return '^';
 "("                 return '(';
 ")"                 return ')';
-{Number}            yylval.value = atoi(yytext); yylval.polish = strdup(yytext); return NUM;
+{Number}            {
+                        yylval.value = atoi(yytext);
+                        yylval.polish = strdup(yytext);
+                        yylval.primitive = true;
+                        return NUM;
+                    }
 
 "\\\n"              ;
 [[:blank:]]+        ;
