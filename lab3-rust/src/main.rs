@@ -6,6 +6,6 @@ lalrpop_mod!(calc);
 fn main() {
     let stdin = std::io::stdin();
     for line in stdin.lock().lines() {
-        println!("{:?}", calc::TermParser::new().parse(&line.unwrap()))
+        println!("{:?}", calc::ExprParser::new().parse(&line.unwrap()))
     }
 }
