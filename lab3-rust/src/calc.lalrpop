@@ -1,5 +1,5 @@
 use std::str::FromStr;
-use num::integer::div_floor;
+use num::integer::{div_floor,mod_floor};
 
 grammar;
 
@@ -12,6 +12,7 @@ pub Expr: i32 = {
 Factor: i32 = {
     <l:Factor> "*" <r:Term> => l * r,
     <l:Factor> "/" <r:Term> => div_floor(l, r),
+    <l:Factor> "%" <r:Term> => mod_floor(l, r),
     Term,
 };
 
