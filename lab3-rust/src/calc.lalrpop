@@ -1,4 +1,5 @@
 use std::str::FromStr;
+use num::integer::div_floor;
 
 grammar;
 
@@ -10,13 +11,14 @@ pub Expr: i32 = {
 
 Factor: i32 = {
     <l:Factor> "*" <r:Term> => l * r,
-    <l:Factor> "/" <r:Term> => l / r,
+    <l:Factor> "/" <r:Term> => div_floor(l, r),
     Term,
 };
 
 Term: i32 = {
     Num,
     "(" <Expr> ")",
+    "-" <Term> => -<>,
 };
 
 Num: i32 = {
