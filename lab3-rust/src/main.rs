@@ -1,3 +1,4 @@
+extern crate ast;
 extern crate num;
 
 use lalrpop_util::lalrpop_mod;
@@ -15,11 +16,14 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::calc;
+    use ast::ExprEvaluator;
 
     fn parse<'input>(
         input: &'input str,
     ) -> Result<i32, lalrpop_util::ParseError<usize, calc::Token<'input>, &'static str>> {
-        calc::ExprParser::new().parse(input)
+        let mut evaluator = ExprEvaluator::new();
+        calc::ExprParser::new().parse(input)?.walk(&mut evaluator);
+        Ok(evaluator.value().unwrap())
     }
 
     fn eq(input: &str, expected: i32) {
@@ -179,7 +183,7 @@ mod tests {
             eq("2+2-2/2", 3);
             eq("2*2-2/2", 3);
             eq("2*(2-2)/2", 0);
-            eq("2*2-2/2", 3);
+            eq("2*(2-2/2)", 2);
             eq("2*6/3*4", 16);
             eq("2*6/5%3*4", 8);
 

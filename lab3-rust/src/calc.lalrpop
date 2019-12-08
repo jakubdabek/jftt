@@ -1,33 +1,49 @@
 use std::str::FromStr;
-use std::convert::TryInto;
-use num::pow;
-use num::integer::{div_floor,mod_floor};
+
+use ast::{Expr, BinaryOpcode, UnaryOpcode};
 
 grammar;
 
-pub Expr: i32 = {
-    <l:Expr> "+" <r:Factor> => l + r,
-    <l:Expr> "-" <r:Factor> => l - r,
+pub Expr: Box<Expr> = {
+    Expr ExprOp Factor => Box::new(Expr::BinOp(<>)),
     Factor,
 };
 
-Factor: i32 = {
-    <l:Factor> "*" <r:ExpTerm> => l * r,
-    <l:Factor> "/" <r:ExpTerm> => div_floor(l, r),
-    <l:Factor> "%" <r:ExpTerm> => mod_floor(l, r),
+ExprOp: BinaryOpcode = {
+    "+" => BinaryOpcode::Addition,
+    "-" => BinaryOpcode::Subtraction,
+}
+
+Factor: Box<Expr> = {
+    Factor FactorOp ExpTerm => Box::new(Expr::BinOp(<>)),
     ExpTerm,
 };
 
-ExpTerm: i32 = {
-    <l:Term> "^" <r:ExpTerm> => pow(l, r.try_into().unwrap()),
+FactorOp: BinaryOpcode = {
+    "*" => BinaryOpcode::Multiplication,
+    "/" => BinaryOpcode::Division,
+    "%" => BinaryOpcode::Modulo,
+}
+
+
+ExpTerm: Box<Expr> = {
+    Term ExpTermOp ExpTerm => Box::new(Expr::BinOp(<>)),
     Term,
 };
 
-Term: i32 = {
-    Num,
+ExpTermOp: BinaryOpcode = {
+    "^" => BinaryOpcode::Exponentiation,
+}
+
+Term: Box<Expr> = {
+    Num => Box::new(Expr::Num(<>)),
     "(" <Expr> ")",
-    "-" <Term> => -<>,
+    TermOp Term => Box::new(Expr::UnOp(<>)),
 };
+
+TermOp: UnaryOpcode = {
+    "-" => UnaryOpcode::Negation,
+}
 
 Num: i32 = {
     r"[0-9]+" => i32::from_str(<>).unwrap(),
