@@ -1,4 +1,6 @@
 use std::str::FromStr;
+use std::convert::TryInto;
+use num::pow;
 use num::integer::{div_floor,mod_floor};
 
 grammar;
@@ -10,9 +12,14 @@ pub Expr: i32 = {
 };
 
 Factor: i32 = {
-    <l:Factor> "*" <r:Term> => l * r,
-    <l:Factor> "/" <r:Term> => div_floor(l, r),
-    <l:Factor> "%" <r:Term> => mod_floor(l, r),
+    <l:Factor> "*" <r:ExpTerm> => l * r,
+    <l:Factor> "/" <r:ExpTerm> => div_floor(l, r),
+    <l:Factor> "%" <r:ExpTerm> => mod_floor(l, r),
+    ExpTerm,
+};
+
+ExpTerm: i32 = {
+    <l:Term> "^" <r:ExpTerm> => pow(l, r.try_into().unwrap()),
     Term,
 };
 
