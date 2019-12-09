@@ -14,18 +14,6 @@ pub enum Expr {
     Error,
 }
 
-pub trait ExprVisitor: Sized {
-    fn visit_binop(&mut self, l: &Expr, _: BinaryOpcode, r: &Expr) {
-        l.walk(self);
-        r.walk(self);
-    }
-    fn visit_unop(&mut self, _: UnaryOpcode, e: &Expr) {
-        e.walk(self);
-    }
-    fn visit_num(&mut self, _: i32) {}
-    fn visit_error(&mut self) {}
-}
-
 impl Expr {
     pub fn walk<V: ExprVisitor>(&self, visitor: &mut V) {
         use self::Expr::*;
@@ -37,6 +25,30 @@ impl Expr {
             Error => visitor.visit_error(),
         }
     }
+}
+
+impl Debug for Expr {
+    fn fmt(&self, fmt: &mut Formatter) -> Result<(), Error> {
+        use self::Expr::*;
+        match *self {
+            Num(n) => write!(fmt, "{:?}", n),
+            BinOp(ref l, op, ref r) => write!(fmt, "({:?} {:?} {:?})", l, op, r),
+            UnOp(op, ref a) => write!(fmt, "({:?} {:?})", op, a),
+            Error => write!(fmt, "error"),
+        }
+    }
+}
+
+pub trait ExprVisitor: Sized {
+    fn visit_binop(&mut self, l: &Expr, _op: BinaryOpcode, r: &Expr) {
+        l.walk(self);
+        r.walk(self);
+    }
+    fn visit_unop(&mut self, _op: UnaryOpcode, e: &Expr) {
+        e.walk(self);
+    }
+    fn visit_num(&mut self, _val: i32) {}
+    fn visit_error(&mut self) {}
 }
 
 pub struct ExprEvaluator {
@@ -83,15 +95,50 @@ impl ExprVisitor for ExprEvaluator {
     }
 }
 
-impl Debug for Expr {
-    fn fmt(&self, fmt: &mut Formatter) -> Result<(), Error> {
-        use self::Expr::*;
-        match *self {
-            Num(n) => write!(fmt, "{:?}", n),
-            BinOp(ref l, op, ref r) => write!(fmt, "({:?} {:?} {:?})", l, op, r),
-            UnOp(op, ref a) => write!(fmt, "({:?} {:?})", op, a),
-            Error => write!(fmt, "error"),
+pub struct RPNEvaluator {
+    rpn: String,
+}
+
+impl RPNEvaluator {
+    pub fn new() -> RPNEvaluator {
+        RPNEvaluator { rpn: String::new() }
+    }
+
+    pub fn value(self) -> String {
+        self.rpn
+    }
+}
+
+impl ExprVisitor for RPNEvaluator {
+    fn visit_binop(&mut self, l: &Expr, op: BinaryOpcode, r: &Expr) {
+        l.walk(self);
+        self.rpn.push(' ');
+        r.walk(self);
+        self.rpn.push(' ');
+
+        self.rpn.push_str(op.symbol());
+    }
+
+    fn visit_unop(&mut self, op: UnaryOpcode, e: &Expr) {
+        match e {
+            Expr::Num(_) => {
+                self.rpn.push_str(op.prefix_symbol());
+                e.walk(self);
+            },
+            _ => {
+                e.walk(self);
+                self.rpn.push(' ');
+                self.rpn.push_str(op.postfix_symbol());
+            }
         }
+    }
+
+    fn visit_num(&mut self, val: i32) {
+        self.rpn.push_str(&val.to_string())
+    }
+
+    fn visit_error(&mut self) {
+        unimplemented!()
     }
 }
 
@@ -106,6 +153,19 @@ pub enum BinaryOpcode {
 }
 
 impl BinaryOpcode {
+    fn symbol(&self) -> &'static str {
+        use self::BinaryOpcode::*;
+
+        match *self {
+            Addition => "+",
+            Subtraction => "-",
+            Multiplication => "*",
+            Division => "/",
+            Modulo => "%",
+            Exponentiation => "^",
+        }
+    }
+
     fn execute(&self, a: i32, b: i32) -> Result<i32, String> {
         use self::BinaryOpcode::*;
 
@@ -140,19 +200,7 @@ impl BinaryOpcode {
 
 impl Debug for BinaryOpcode {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
-        use self::BinaryOpcode::*;
-        write!(
-            f,
-            "{}",
-            match *self {
-                Addition => "+",
-                Subtraction => "-",
-                Multiplication => "*",
-                Division => "/",
-                Modulo => "%",
-                Exponentiation => "^",
-            }
-        )
+        write!(f, "{}", self.symbol())
     }
 }
 
@@ -162,6 +210,22 @@ pub enum UnaryOpcode {
 }
 
 impl UnaryOpcode {
+    fn prefix_symbol(&self) -> &'static str {
+        use self::UnaryOpcode::*;
+
+        match *self {
+            Negation => "-",
+        }
+    }
+
+    fn postfix_symbol(&self) -> &'static str {
+        use self::UnaryOpcode::*;
+
+        match *self {
+            Negation => "~",
+        }
+    }
+
     fn execute(&self, val: i32) -> Result<i32, String> {
         use self::UnaryOpcode::*;
 
@@ -173,13 +237,6 @@ impl UnaryOpcode {
 
 impl Debug for UnaryOpcode {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
-        use self::UnaryOpcode::*;
-        write!(
-            f,
-            "{}",
-            match *self {
-                Negation => "-",
-            }
-        )
+        write!(f, "{}", self.prefix_symbol())
     }
 }
