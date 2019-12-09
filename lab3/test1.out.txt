@@ -4,7 +4,7 @@
 = 512
 2 3 - 2 -
 = -3
-syntax error
+ERROR: syntax error
 24 5 / 3 %
 = 1
 -4 3 %

@@ -13,6 +13,7 @@ int mypow(int a, int exp);
 int mydiv(int a, int b);
 int mymod(int a, int b);
 
+#define GUARD(cond, msg) if (cond) { yyerror(msg); YYERROR; }
 
 void save_unary(struct result *a, char op, char postfix_op, int value, struct result *result);
 void save_binary(struct result *a, struct result *b, char op, int value, struct result *result);
@@ -46,13 +47,13 @@ line:
 
 exp:
     NUM
-    | exp '+' exp           { save_binary(&$1, &$3, '+', $1.value + $3.value, &$$);       }
-    | exp '-' exp           { save_binary(&$1, &$3, '-', $1.value - $3.value, &$$);       }
-    | exp '*' exp           { save_binary(&$1, &$3, '*', $1.value * $3.value, &$$);       }
-    | exp '/' exp           { save_binary(&$1, &$3, '/', mydiv($1.value, $3.value), &$$); }
-    | exp '%' exp           { save_binary(&$1, &$3, '%', mymod($1.value, $3.value), &$$); }
-    | '-' exp  %prec NEG    { save_unary(&$2, '-', '~', -$2.value, &$$);                  }
-    | exp '^' exp           { save_binary(&$1, &$3, '^', mypow($1.value, $3.value), &$$); }
+    | exp '+' exp           { save_binary(&$1, &$3, '+', $1.value + $3.value, &$$);                                                 }
+    | exp '-' exp           { save_binary(&$1, &$3, '-', $1.value - $3.value, &$$);                                                 }
+    | exp '*' exp           { save_binary(&$1, &$3, '*', $1.value * $3.value, &$$);                                                 }
+    | exp '/' exp           { GUARD($3.value == 0, "Division by zero!") save_binary(&$1, &$3, '/', mydiv($1.value, $3.value), &$$); }
+    | exp '%' exp           { GUARD($3.value == 0, "Division by zero!") save_binary(&$1, &$3, '%', mymod($1.value, $3.value), &$$); }
+    | '-' exp  %prec NEG    { save_unary(&$2, '-', '~', -$2.value, &$$);                                                            }
+    | exp '^' exp           { GUARD($3.value < 0, "Negative exponent!") save_binary(&$1, &$3, '^', mypow($1.value, $3.value), &$$); }
     | '(' exp ')'           { $$ = $2; }
     ;
 

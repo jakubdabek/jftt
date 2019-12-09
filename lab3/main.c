@@ -8,7 +8,7 @@ int yyparse(void);
 
 void yyerror(const char *msg)
 {
-    printf("%s\n", msg);
+    printf("ERROR: %s\n", msg);
 }
 
 void take_result(struct result *res)
