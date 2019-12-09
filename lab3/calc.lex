@@ -1,5 +1,6 @@
 %option noinput
 %option nounput
+%option noyywrap
 
 %{
     #include "calc.tab.h"
