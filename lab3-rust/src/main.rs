@@ -1,28 +1,86 @@
 extern crate ast;
 extern crate num;
+extern crate regex;
 
 use lalrpop_util::lalrpop_mod;
 use std::io::BufRead;
+use regex::Regex;
+use ast::{Expr, ExprEvaluator, RPNEvaluator};
 
 lalrpop_mod!(pub calc);
 
+fn parse<'input>(
+    input: &'input str,
+) -> Result<Box<Expr>, lalrpop_util::ParseError<usize, calc::Token<'input>, &'static str>> {
+    calc::ExprParser::new().parse(input)
+}
+
 fn main() {
     let stdin = std::io::stdin();
+
+    let comment_regex = Regex::new(r"^#.*").unwrap();
+    let mut current_line = String::new();
+    let mut broken_line = false;
+
     for line in stdin.lock().lines() {
-        println!("{:?}", calc::ExprParser::new().parse(&line.unwrap()))
-    }
+        let line = &line.unwrap();
+
+        if line.ends_with('\\') {
+            if !broken_line {
+                current_line.clear();
+            }
+            current_line.push_str(&line[..line.len()-1]);
+            broken_line = true;
+            continue;
+        } else if broken_line {
+            current_line.push_str(&line);
+            broken_line = false;
+        } else {
+            current_line.clear();
+            current_line.push_str(&line);
+        }
+
+        if comment_regex.is_match(&current_line) {
+            continue;
+        }
+
+        println!("{:?}", current_line);
+        match parse(&current_line) {
+            Ok(result) => {
+                fn eval(result: &Expr) -> bool {
+                    let mut value_evaluator = ExprEvaluator::new();
+
+                    result.walk(&mut value_evaluator);
+                    let value = value_evaluator.value();
+
+                    match value {
+                        Ok(value) => {
+                            println!("= {}", value);
+                            true
+                        },
+                        Err(error) => {
+                            println!("Error: {}", error);
+                            false
+                        },
+                    }
+                }
+
+                if eval(&result) {
+                    let mut rpn_evaluator = RPNEvaluator::new();
+                    result.walk(&mut rpn_evaluator);
+                    let rpn = rpn_evaluator.value();
+
+                    println!("{}", rpn);
+                }
+            },
+            Err(_err) => println!("Syntax error"),
+        };
+    };
 }
 
 #[cfg(test)]
 mod general_tests {
-    use super::calc;
-    use ast::Expr;
-
-    fn parse<'input>(
-        input: &'input str,
-    ) -> Result<Box<Expr>, lalrpop_util::ParseError<usize, calc::Token<'input>, &'static str>> {
-        calc::ExprParser::new().parse(input)
-    }
+    use super::parse;
 
     #[test]
     fn invalid_symbol() {
