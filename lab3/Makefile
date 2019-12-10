@@ -1,7 +1,7 @@
 SHELL:=/bin/bash
 CC=gcc
 CFLAGS=-Wall -pedantic -std=gnu11
-LDFLAGS=-lfl -lm
+LDFLAGS=-lm
 FILES=main.o calc.yy.o calc.tab.o
 
 all: main
