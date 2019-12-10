@@ -2,10 +2,10 @@ extern crate ast;
 extern crate num;
 extern crate regex;
 
-use lalrpop_util::lalrpop_mod;
-use std::io::BufRead;
-use regex::Regex;
 use ast::{Expr, ExprEvaluator, RPNEvaluator};
+use lalrpop_util::lalrpop_mod;
+use regex::Regex;
+use std::io::BufRead;
 
 lalrpop_mod!(pub calc);
 
@@ -29,7 +29,7 @@ fn main() {
             if !broken_line {
                 current_line.clear();
             }
-            current_line.push_str(&line[..line.len()-1]);
+            current_line.push_str(&line[..line.len() - 1]);
             broken_line = true;
             continue;
         } else if broken_line {
@@ -57,11 +57,11 @@ fn main() {
                         Ok(value) => {
                             println!("= {}", value);
                             true
-                        },
+                        }
                         Err(error) => {
                             println!("Error: {}", error);
                             false
-                        },
+                        }
                     }
                 }
 
@@ -72,10 +72,10 @@ fn main() {
 
                     println!("{}", rpn);
                 }
-            },
+            }
             Err(_err) => println!("Syntax error"),
         };
-    };
+    }
 }
 
 #[cfg(test)]
@@ -125,14 +125,27 @@ mod value_tests {
 
     fn parse<'input>(
         input: &'input str,
-    ) -> Result<i32, lalrpop_util::ParseError<usize, calc::Token<'input>, &'static str>> {
+    ) -> Result<
+        Result<i32, String>,
+        lalrpop_util::ParseError<usize, calc::Token<'input>, &'static str>,
+    > {
         let mut evaluator = ExprEvaluator::new();
         calc::ExprParser::new().parse(input)?.walk(&mut evaluator);
-        Ok(evaluator.value().unwrap())
+        Ok(evaluator.value())
     }
 
     fn eq(input: &str, expected: i32) {
-        assert_eq!(parse(input).unwrap(), expected);
+        assert_eq!(
+            parse(input).expect("Parse error").expect("Evaluator error"),
+            expected
+        );
+    }
+
+    #[test]
+    fn invalid() {
+        assert!(parse("2/0").expect("Parse error").is_err());
+        assert!(parse("2%0").expect("Parse error").is_err());
+        assert!(parse("2^(-1)").expect("Parse error").is_err());
     }
 
     mod without_negation {
@@ -259,7 +272,7 @@ mod value_tests {
             eq("2*(2-2/2)", 2);
             eq("2*6/3*4", 16);
             eq("2*6/5%3*4", 8);
-
+            eq("2*3^0", 2);
             eq("2^2^2", 16);
             eq("3^2^2", 81);
             eq("2^2^3", 256);
@@ -516,8 +529,6 @@ mod value_tests {
                 eq("-3^3", -27);
                 eq("-3^4", -81);
 
-                // eq("2^-2^2", 16);
-                // eq("-2^-2^2", 16);
                 eq("-3^2^2", -81);
                 eq("-2^2^3", -256);
                 eq("-2^3^2", -512);

@@ -12,38 +12,42 @@ pub Expr: Box<Expr> = {
 ExprOp: BinaryOpcode = {
     "+" => BinaryOpcode::Addition,
     "-" => BinaryOpcode::Subtraction,
-}
+};
 
 Factor: Box<Expr> = {
-    Factor FactorOp ExpTerm => Box::new(Expr::BinOp(<>)),
-    ExpTerm,
+    Factor FactorOp UnaryTerm => Box::new(Expr::BinOp(<>)),
+    UnaryTerm,
 };
 
 FactorOp: BinaryOpcode = {
     "*" => BinaryOpcode::Multiplication,
     "/" => BinaryOpcode::Division,
     "%" => BinaryOpcode::Modulo,
-}
+};
 
+UnaryTerm: Box<Expr> = {
+    UnaryOp UnaryTerm => Box::new(Expr::UnOp(<>)),
+    ExpTerm,
+};
+
+UnaryOp: UnaryOpcode = {
+    "-" => UnaryOpcode::Negation,
+};
 
 ExpTerm: Box<Expr> = {
-    Term ExpTermOp ExpTerm => Box::new(Expr::BinOp(<>)),
+    // Term ExpTermOp UnaryTerm => Box::new(Expr::BinOp(<>)), // enable x^-x
+    Term ExpTermOp ExpTerm => Box::new(Expr::BinOp(<>)), // disable x^-x
     Term,
 };
 
 ExpTermOp: BinaryOpcode = {
     "^" => BinaryOpcode::Exponentiation,
-}
+};
 
 Term: Box<Expr> = {
     Num => Box::new(Expr::Num(<>)),
     "(" <Expr> ")",
-    TermOp Term => Box::new(Expr::UnOp(<>)),
 };
-
-TermOp: UnaryOpcode = {
-    "-" => UnaryOpcode::Negation,
-}
 
 Num: i32 = {
     r"[0-9]+" => i32::from_str(<>).unwrap(),
